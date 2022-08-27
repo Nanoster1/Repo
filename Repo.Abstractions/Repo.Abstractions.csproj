@@ -4,7 +4,13 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>Repo.Core</RootNamespace>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <PackageId>CSOL.Repo.Abstractions</PackageId>
+        <Authors>Nanoster</Authors>
+        <Company>CSOL</Company>
+        <Version>1.0.0</Version>
     </PropertyGroup>
 
 </Project>

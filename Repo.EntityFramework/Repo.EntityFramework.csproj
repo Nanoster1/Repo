@@ -5,10 +5,22 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>preview</LangVersion>
+        <EnablePreviewFeatures>true</EnablePreviewFeatures>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Repo.Abstractions\Repo.Abstractions.csproj" />
+        <ProjectReference Include="..\Repo.Abstractions\Repo.Abstractions.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.7" />
+    </ItemGroup>
+
+    <PropertyGroup>
+        <PackageId>CSOL.Repo.EntityFramework</PackageId>
+        <Authors>Nanoster</Authors>
+        <Company>CSOL</Company>
+        <Version>1.0.0</Version>
+    </PropertyGroup>
 
 </Project>

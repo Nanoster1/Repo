@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Repo", "Repo\Repo.csproj", "{8F21BA79-2C3D-4A72-92ED-856094D0539D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Repo.Abstractions", "Repo.Abstractions\Repo.Abstractions.csproj", "{49CF0324-0979-4E01-A54E-4C7634D5CDC6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Repo.EntityFramework", "Repo.EntityFramework\Repo.EntityFramework.csproj", "{10677451-E41D-4679-B037-38563619CD79}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -8,9 +10,13 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{8F21BA79-2C3D-4A72-92ED-856094D0539D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8F21BA79-2C3D-4A72-92ED-856094D0539D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8F21BA79-2C3D-4A72-92ED-856094D0539D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8F21BA79-2C3D-4A72-92ED-856094D0539D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49CF0324-0979-4E01-A54E-4C7634D5CDC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49CF0324-0979-4E01-A54E-4C7634D5CDC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49CF0324-0979-4E01-A54E-4C7634D5CDC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49CF0324-0979-4E01-A54E-4C7634D5CDC6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10677451-E41D-4679-B037-38563619CD79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10677451-E41D-4679-B037-38563619CD79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10677451-E41D-4679-B037-38563619CD79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10677451-E41D-4679-B037-38563619CD79}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

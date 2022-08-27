@@ -1,6 +1,6 @@
-namespace Repo.Core.Interfaces;
+namespace Repo.Abstractions.Interfaces;
 
-public class IModel
+public interface IModel<TId> where TId : IEquatable<TId>
 {
-    
+    TId Id { get; }
 }
