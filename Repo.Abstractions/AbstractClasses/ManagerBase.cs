@@ -2,7 +2,7 @@ using Repo.Abstractions.Interfaces;
 
 namespace Repo.Abstractions.AbstractClasses;
 
-public abstract class Manager<TModel, TId> : IManager<TModel, TId> 
+public abstract class ManagerBase<TModel, TId> : IManager<TModel, TId> 
     where TModel : class, IModel<TId>
     where TId : IEquatable<TId>
 {
@@ -10,7 +10,7 @@ public abstract class Manager<TModel, TId> : IManager<TModel, TId>
     protected readonly IRepository<TModel, TId> Repository;
     protected readonly IUnitOfWork UnitOfWork;
 
-    protected Manager(IValidator<TModel> validator, IRepository<TModel, TId> repository, IUnitOfWork unitOfWork)
+    protected ManagerBase(IValidator<TModel> validator, IRepository<TModel, TId> repository, IUnitOfWork unitOfWork)
     {
         Validator = validator;
         Repository = repository;
