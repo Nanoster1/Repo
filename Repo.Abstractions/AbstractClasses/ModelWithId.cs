@@ -2,6 +2,10 @@ using Repo.Abstractions.Interfaces;
 
 namespace Repo.Abstractions.AbstractClasses;
 
+/// <summary>
+/// Abstract Model class with Id
+/// </summary>
+/// <typeparam name="TId">Type of model id</typeparam>
 public abstract class ModelWithId<TId> : IModelWithId<TId>, IEquatable<ModelWithId<TId>>
     where TId : IEquatable<TId>
 {

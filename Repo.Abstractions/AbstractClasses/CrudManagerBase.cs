@@ -21,6 +21,8 @@ public abstract class CrudManagerBase<TModel, TId, TCreateDto, TUpdateDto, TGetD
         UnitOfWork = unitOfWork;
     }
 
+    private NullReferenceException GetObjectMapperNullReferenceException() => new($"{nameof(ObjectMapper)} is null");
+
     #region Get
     
     public virtual async Task<TGetDto?> GetAsync(TId id, CancellationToken token = default)
@@ -36,9 +38,10 @@ public abstract class CrudManagerBase<TModel, TId, TCreateDto, TUpdateDto, TGetD
 
     protected virtual Task<bool> OnBeforeGetAsync(TId id, CancellationToken token) => Task.FromResult(false);
     protected virtual Task OnAfterGetAsync(TId id, TGetDto getDto, CancellationToken token) => Task.CompletedTask;
-    protected virtual TGetDto OnCreateDtoInGetAsync(TModel model) => ObjectMapper != null 
+
+    protected virtual TGetDto OnCreateDtoInGetAsync(TModel model) => ObjectMapper != null
         ? ObjectMapper.CreateAndMap<TModel, TGetDto>(model)
-        : throw new NullReferenceException($"{nameof(ObjectMapper)} is null");
+        : throw GetObjectMapperNullReferenceException();
     
     #endregion
 
@@ -58,7 +61,7 @@ public abstract class CrudManagerBase<TModel, TId, TCreateDto, TUpdateDto, TGetD
     protected virtual Task OnAfterGetByAsync<T>(string propertyName, T value, Range range, IList<TGetDto> getDto, CancellationToken token) => Task.CompletedTask;
     protected virtual IList<TGetDto> OnCreateDtoInGetByAsync(IList<TModel> models) => ObjectMapper != null 
         ? models.Select(model => ObjectMapper.CreateAndMap<TModel, TGetDto>(model)).ToList()
-        : throw new NullReferenceException($"{nameof(ObjectMapper)} is null");
+        : throw GetObjectMapperNullReferenceException();
 
     
     #endregion
@@ -77,20 +80,21 @@ public abstract class CrudManagerBase<TModel, TId, TCreateDto, TUpdateDto, TGetD
 
     protected virtual Task<bool> OnBeforeGetManyAsync(IList<TId> ids, CancellationToken token) => Task.FromResult(false);
     protected virtual Task OnAfterGetManyAsync(IList<TId> ids, IList<TGetDto> getDto, CancellationToken token) => Task.CompletedTask;
-    protected virtual IList<TGetDto> OnCreateDtoInGetManyAsync(IList<TModel> models) => ObjectMapper != null 
+
+    protected virtual IList<TGetDto> OnCreateDtoInGetManyAsync(IList<TModel> models) => ObjectMapper != null
         ? models.Select(model => ObjectMapper.CreateAndMap<TModel, TGetDto>(model)).ToList()
-        : throw new NullReferenceException($"{nameof(ObjectMapper)} is null");
+        : throw GetObjectMapperNullReferenceException();
 
     
     #endregion
 
     #region GetAll
 
-    public virtual async Task<IList<TGetDto>> GetAllAsync(CancellationToken token = default)
+    public virtual async Task<IList<TGetDto>> GetAllAsync(Range range, CancellationToken token = default)
     {
         var isCanceled = await OnBeforeGetAllAsync(token).ConfigureAwait(false);
         if (isCanceled) return Array.Empty<TGetDto>();
-        var models = await Repository.GetAllAsync(token).ConfigureAwait(false);
+        var models = await Repository.GetAllAsync(range, token).ConfigureAwait(false);
         var dto = OnCreateDtoInGetAllAsync(models);
         await OnAfterGetAllAsync(dto, token).ConfigureAwait(false);
         return dto;
@@ -98,9 +102,10 @@ public abstract class CrudManagerBase<TModel, TId, TCreateDto, TUpdateDto, TGetD
     
     protected virtual Task<bool> OnBeforeGetAllAsync(CancellationToken token) => Task.FromResult(false);
     protected virtual Task OnAfterGetAllAsync(IList<TGetDto> getDto, CancellationToken token) => Task.CompletedTask;
-    protected virtual IList<TGetDto> OnCreateDtoInGetAllAsync(IList<TModel> models) => ObjectMapper != null 
+
+    protected virtual IList<TGetDto> OnCreateDtoInGetAllAsync(IList<TModel> models) => ObjectMapper != null
         ? models.Select(model => ObjectMapper.CreateAndMap<TModel, TGetDto>(model)).ToList()
-        : throw new NullReferenceException($"{nameof(ObjectMapper)} is null");
+        : throw GetObjectMapperNullReferenceException();
 
     
     #endregion
@@ -119,9 +124,10 @@ public abstract class CrudManagerBase<TModel, TId, TCreateDto, TUpdateDto, TGetD
 
     protected virtual Task OnBeforeCreateAsync(TCreateDto createDto, CancellationToken token) => Task.CompletedTask;
     protected virtual Task OnAfterCreateAsync(TCreateDto createDto, TId id, TModel model, int saveChangesResult, CancellationToken token) => Task.CompletedTask;
+
     protected virtual TModel OnCreateModelInCreateAsync(TCreateDto createDto) => ObjectMapper != null
         ? ObjectMapper.CreateAndMap<TCreateDto, TModel>(createDto)
-        : throw new NullReferenceException();
+        : throw GetObjectMapperNullReferenceException();
 
     #endregion
 
@@ -131,7 +137,9 @@ public abstract class CrudManagerBase<TModel, TId, TCreateDto, TUpdateDto, TGetD
     {
         var isCanceled = await OnBeforeUpdateAsync(id, updateDto, token).ConfigureAwait(false);
         if (isCanceled) return;
-        var model = OnCreateModelInUpdateAsync(id, updateDto);
+        var model = await Repository.GetAsync(id, token).ConfigureAwait(false); 
+        if (model == null) return;
+        OnCreateModelInUpdateAsync(id, updateDto, model);
         await Repository.UpdateAsync(id, model, token).ConfigureAwait(false);
         var saveChangesResult = await UnitOfWork.SaveChangesAsync(token).ConfigureAwait(false);
         await OnAfterUpdateAsync(id, updateDto, model, saveChangesResult, token).ConfigureAwait(false);
@@ -140,9 +148,11 @@ public abstract class CrudManagerBase<TModel, TId, TCreateDto, TUpdateDto, TGetD
     protected virtual Task<bool> OnBeforeUpdateAsync(TId id, TUpdateDto updateDto, CancellationToken token) => Task.FromResult(false);
     protected virtual Task OnAfterUpdateAsync(TId id, TUpdateDto updateDto, TModel model, int saveChangesResult ,CancellationToken token) => Task.CompletedTask;
 
-    protected virtual TModel OnCreateModelInUpdateAsync(TId id, TUpdateDto updateDto) => ObjectMapper != null
-        ? ObjectMapper.CreateAndMap<TUpdateDto, TModel>(updateDto) 
-        : throw new NullReferenceException();
+    protected virtual void OnCreateModelInUpdateAsync(TId id, TUpdateDto updateDto, TModel model)
+    {
+        if (ObjectMapper == null) throw new NullReferenceException();
+        ObjectMapper.MapTo(updateDto, model);
+    }
 
     #endregion
 
@@ -214,7 +224,7 @@ public abstract class CrudManagerBase<TModel, TId, TCreateDto> :
     {
     }
 
-    protected override TModel OnCreateModelInUpdateAsync(TId id, TModel model) => model;
+    protected override void OnCreateModelInUpdateAsync(TId id, TModel updateDto, TModel model) {}
 }
 
 #endregion

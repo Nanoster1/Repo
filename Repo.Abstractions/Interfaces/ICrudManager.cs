@@ -10,7 +10,7 @@ public interface ICrudManager<TModel, TId, TCreateDto, TUpdateDto, TGetDto>
     Task<TGetDto?> GetAsync(TId id, CancellationToken token = default);
     Task<IList<TGetDto>> GetByAsync<T>(string propertyName, T value, Range range, CancellationToken token = default);
     Task<IList<TGetDto>> GetManyAsync(IList<TId> ids, CancellationToken token = default);
-    Task<IList<TGetDto>> GetAllAsync(CancellationToken token = default);
+    Task<IList<TGetDto>> GetAllAsync(Range range, CancellationToken token = default);
     Task<TId> CreateAsync(TCreateDto createDto, CancellationToken token = default);
     Task UpdateAsync(TId id, TUpdateDto updateDto, CancellationToken token = default);
     Task DeleteAsync(TId id, CancellationToken token = default);

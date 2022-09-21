@@ -49,10 +49,11 @@ public abstract class RepositoryBase<TDbModel, TBsModel, TId> : IRepository<TBsM
             .ToListAsync(token).ConfigureAwait(false);
     }
 
-    public virtual async Task<IList<TBsModel>> GetAllAsync(CancellationToken token = default)
+    public virtual async Task<IList<TBsModel>> GetAllAsync(Range range, CancellationToken token = default)
     {
         return await Set.AsNoTracking()
             .Select(dbModel => dbModel.ConvertToBusinessModel())
+            .Take(range)
             .ToListAsync(token).ConfigureAwait(false);
     }
 
