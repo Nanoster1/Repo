@@ -5,8 +5,8 @@ using Repo.Abstractions.Interfaces;
 namespace Repo.EntityFramework.AbstractClasses;
 
 public abstract class RepositoryBase<TDbModel, TBsModel, TId> : IRepository<TBsModel, TId>
-    where TDbModel : class, IModel<TId>, IRelatedDbModel<TDbModel, TBsModel>
-    where TBsModel: class, IModel<TId>
+    where TDbModel : class, IModelWithId<TId>, IRelatedDbModel<TDbModel, TBsModel>
+    where TBsModel: class, IModelWithId<TId>
     where TId : IEquatable<TId>
 {
     protected readonly DbSet<TDbModel> Set;
@@ -15,54 +15,70 @@ public abstract class RepositoryBase<TDbModel, TBsModel, TId> : IRepository<TBsM
     protected RepositoryBase(DbContext context)
     {
         Context = context;
-        Set = Context.Set<TDbModel>();
+        Set = context.Set<TDbModel>();
     }
 
-    public async Task<IList<TBsModel>> GetMany(params TId[] ids)
-    {
-        return await Set.AsNoTracking()
-            .Where(dbModel => ids.Any(dbModel.Id.Equals))
-            .Select(dbModel => dbModel.ConvertToBusinessModel())
-            .ToListAsync();
-    }
-
-    public async Task<IList<TBsModel>> GetAll()
-    {
-        return await Set.AsNoTracking()
-            .Select(dbModel => dbModel.ConvertToBusinessModel())
-            .ToListAsync();
-    }
-
-    public async Task<TBsModel?> Get(TId id)
-    {
-        return await Set.Where(dbModel => dbModel.Id.Equals(id))
-            .Select(dbModel => dbModel.ConvertToBusinessModel())
-            .FirstOrDefaultAsync();
-    }
-
-    public async Task Update(TId id, TBsModel bsModel)
-    {
-        var dbModel = await GetDbModel(id, true);
-        dbModel?.UpdateDataFromBusinessModel(bsModel);
-    }
-
-    public async Task Delete(TId id)
-    {
-        var dbModel = await GetDbModel(id, false);
-        if (dbModel != null) Set.Remove(dbModel);
-    }
-
-    public async Task<TId> Create(TBsModel bsModel)
-    {
-        var dbModel = TDbModel.CreateFromBusinessModel(bsModel);
-        await Set.AddAsync(dbModel);
-        return dbModel.Id;
-    }
-
-    protected async Task<TDbModel?> GetDbModel(TId id, bool isTracking)
+    protected virtual async Task<TDbModel?> GetDbModelAsync(TId id, bool isTracking, CancellationToken token = default)
     {
         return await (isTracking ? Set.AsTracking() : Set.AsNoTracking())
             .Where(dbModel => dbModel.Id.Equals(id))
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(token).ConfigureAwait(false);
+    }
+
+    public virtual async Task<TBsModel?> GetAsync(TId id, CancellationToken token = default)
+    {
+        var dbModel = await GetDbModelAsync(id, false, token).ConfigureAwait(false);
+        return dbModel?.ConvertToBusinessModel();
+    }
+
+    public virtual async Task<IList<TBsModel>> GetByAsync<T>(string propertyName, T value, Range range, CancellationToken token = default)
+    {
+        var tableName = Set.EntityType.GetSchemaQualifiedTableName();
+        if (tableName == null) throw new NullReferenceException($"{nameof(tableName)} is null");
+        return await Set.FromSqlInterpolated($"SELECT * FROM {tableName} WHERE {propertyName} = {value}")
+            .AsNoTracking()
+            .Select(model => model.ConvertToBusinessModel())
+            .ToListAsync(token).ConfigureAwait(false);
+    }
+
+    public virtual async Task<IList<TBsModel>> GetManyAsync(IList<TId> ids, CancellationToken token = default)
+    {
+        return await Set.AsNoTracking()
+            .Where(dbModel => ids.Contains(dbModel.Id))
+            .Select(dbModel => dbModel.ConvertToBusinessModel())
+            .ToListAsync(token).ConfigureAwait(false);
+    }
+
+    public virtual async Task<IList<TBsModel>> GetAllAsync(CancellationToken token = default)
+    {
+        return await Set.AsNoTracking()
+            .Select(dbModel => dbModel.ConvertToBusinessModel())
+            .ToListAsync(token).ConfigureAwait(false);
+    }
+
+    public virtual async Task<TId> CreateAsync(TBsModel model, CancellationToken token = default)
+    {
+        var dbModel = TDbModel.CreateFromBusinessModel(model);
+        await Set.AddAsync(dbModel, token).ConfigureAwait(false);
+        return model.Id;
+    }
+
+    public virtual async Task UpdateAsync(TId id, TBsModel model, CancellationToken token = default)
+    {
+        var dbModel = await GetDbModelAsync(id, true, token).ConfigureAwait(false);
+        dbModel?.UpdateDataFromBusinessModel(model);
+    }
+
+    public virtual async Task DeleteAsync(TId id, CancellationToken token = default)
+    {
+        var dbModel = await GetDbModelAsync(id, true, token); 
+        if (dbModel != null) Set.Remove(dbModel);
+    }
+
+    public virtual async Task DeleteManyAsync(IList<TId> ids, CancellationToken token = default)
+    {
+        var dbModels = await Set.Where(model => ids.Contains(model.Id))
+            .ToListAsync(token).ConfigureAwait(false);
+        Set.RemoveRange(dbModels);
     }
 }

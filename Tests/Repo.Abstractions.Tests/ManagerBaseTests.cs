@@ -10,24 +10,24 @@ namespace Repo.Abstractions.Tests;
 
 public class ManagerBaseTests
 {
-    public class TestModel : IModel<int>
+    public class TestModelWithId : IModelWithId<int>
     {
-        public TestModel(int id) => Id = id;
+        public TestModelWithId(int id) => Id = id;
         public int Id { get; set; }
     }
     
-    public class TestManager : ManagerBase<TestModel, int>
+    public class TestManager : ManagerBase<TestModelWithId, int>
     {
-        public TestManager(IValidator<TestModel> validator, IRepository<TestModel, int> repository, IUnitOfWork unitOfWork) : base(validator, repository, unitOfWork)
+        public TestManager(IValidator<TestModelWithId> validator, IRepository<TestModelWithId, int> repository, IUnitOfWork unitOfWork) : base(validator, repository, unitOfWork)
         {
         }
     }
 
-    private Mock<IValidator<TestModel>> _validatorMock;
-    private Mock<IRepository<TestModel, int>> _repositoryMock;
+    private Mock<IValidator<TestModelWithId>> _validatorMock;
+    private Mock<IRepository<TestModelWithId, int>> _repositoryMock;
     private Mock<IUnitOfWork> _unitOfWorkMock;
     
-    private TestModel GetTestModel(int id) => new TestModel(id);
+    private TestModelWithId GetTestModel(int id) => new TestModelWithId(id);
     private TestManager GetTestManager() => new TestManager(_validatorMock.Object, _repositoryMock.Object, _unitOfWorkMock.Object);
 
     private void UnitOfWorkSetUp(Func<int> function)
@@ -38,23 +38,23 @@ public class ManagerBaseTests
             .Returns(() => Task.FromResult(function()));
     }
 
-    private void ValidatorSetUp(Func<TestModel, bool> function, Exception ex)
+    private void ValidatorSetUp(Func<TestModelWithId, bool> function, Exception ex)
     {
-        _validatorMock.Setup(validator => validator.Validate(It.IsAny<TestModel>()))
+        _validatorMock.Setup(validator => validator.Validate(It.IsAny<TestModelWithId>()))
             .Returns(function);
-        _validatorMock.Setup(validator => validator.ValidateAsync(It.IsAny<TestModel>()))
-            .Returns<TestModel>(model => Task.FromResult(function(model)));
-        _validatorMock.Setup(validator => validator.ValidateAndThrow(It.IsAny<TestModel>()))
+        _validatorMock.Setup(validator => validator.ValidateAsync(It.IsAny<TestModelWithId>()))
+            .Returns<TestModelWithId>(model => Task.FromResult(function(model)));
+        _validatorMock.Setup(validator => validator.ValidateAndThrow(It.IsAny<TestModelWithId>()))
             .Callback(() => throw ex);
-        _validatorMock.Setup(validator => validator.ValidateAndThrowAsync(It.IsAny<TestModel>()))
+        _validatorMock.Setup(validator => validator.ValidateAndThrowAsync(It.IsAny<TestModelWithId>()))
             .Callback(() => throw ex);
     }
     
     [SetUp]
     public void SetUp()
     {
-        _validatorMock = new Mock<IValidator<TestModel>>();
-        _repositoryMock = new Mock<IRepository<TestModel, int>>();
+        _validatorMock = new Mock<IValidator<TestModelWithId>>();
+        _repositoryMock = new Mock<IRepository<TestModelWithId, int>>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
     }
 
@@ -69,7 +69,7 @@ public class ManagerBaseTests
         //Assert
         Assert.ThrowsAsync<Exception>(async () =>
         {
-            await testManager.Create(testModel);
+            await testManager.CreateAsync(testModel);
         });
     }
 
@@ -78,12 +78,12 @@ public class ManagerBaseTests
     {
         //Arrange
         _validatorMock.SetReturnsDefault(true);
-        TestModel? modelAfterRepository = null;
-        TestModel? modelAfterSaveChanges = null;
+        TestModelWithId? modelAfterRepository = null;
+        TestModelWithId? modelAfterSaveChanges = null;
         var testModel = GetTestModel(5);
         var modelId = testModel.Id;
-        _repositoryMock.Setup(repository => repository.Create(It.IsAny<TestModel>()))
-            .Returns<TestModel>(model =>
+        _repositoryMock.Setup(repository => repository.CreateAsync(It.IsAny<TestModelWithId>()))
+            .Returns<TestModelWithId>(model =>
             {
                 modelAfterRepository = model;
                 return Task.FromResult(model.Id);
@@ -96,7 +96,7 @@ public class ManagerBaseTests
         var testManager = GetTestManager();
 
         //Act
-        var result = await testManager.Create(testModel);
+        var result = await testManager.CreateAsync(testModel);
         
         //Assert
         Assert.IsTrue(ReferenceEquals(testModel, modelAfterSaveChanges));
