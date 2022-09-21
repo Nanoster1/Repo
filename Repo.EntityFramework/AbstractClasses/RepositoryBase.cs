@@ -38,6 +38,7 @@ public abstract class RepositoryBase<TDbModel, TBsModel, TId> : IRepository<TBsM
         return await Set.FromSqlInterpolated($"SELECT * FROM {tableName} WHERE {propertyName} = {value}")
             .AsNoTracking()
             .Select(model => model.ConvertToBusinessModel())
+            .Take(range)
             .ToListAsync(token).ConfigureAwait(false);
     }
 
