@@ -10,7 +10,11 @@
         <PackageId>CSOL.Repo.Abstractions</PackageId>
         <Authors>Nanoster</Authors>
         <Company>CSOL</Company>
-        <Version>1.0.1</Version>
+        <Version>1.0.3</Version>
     </PropertyGroup>
+    
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
+    </ItemGroup>
 
 </Project>
